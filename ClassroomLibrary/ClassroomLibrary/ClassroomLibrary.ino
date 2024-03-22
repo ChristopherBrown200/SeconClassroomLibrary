@@ -28,26 +28,34 @@ Keypad customKeypad = Keypad( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS
 //Object for LCD Display
 LiquidCrystal lcd(37, 38, 39, 40, 41, 42);
 
+#define GreenLEDPin 35
+#define RedLEDPin 33
+
 struct Student{
   String name;
   int id;
 };
-Student chris = {"Chris", 0644};
-Student jay = {"Jay", 7691};
+// Student none = {"None", 0000};
+Student chris = {"Chris", 2003};
+Student jay = {"Jay", 2005};
 Student henry = {"Henry", 2004};
+const int numStudents = 3;
+Student students[] = {chris, jay, henry};
 
 struct Item{
   String id, title;
   bool checkedOut;
+  String checkedOutBy, lastCheeckOutBy;
 };
 
 //Array of Items
-Item card = {"33 55 14 11", "card", false};
-Item keychain = {"EF 18 73 1D", "key chain", false};
+Item card = {"33 55 14 11", "Card", false, "None", "None"};
+Item keychain = {"EF 18 73 1D", "Key Chain", false, "None", "None"};
 const int numItems = 2;
 Item items[numItems] = {card, keychain};
 String id = "EF 18 73 1D";
 
+bool menuShown = false;
 
 void setup() {
   Serial.begin(9600);  // Initialize serial communications with the PC
@@ -59,7 +67,39 @@ void setup() {
 }
 
 void loop() {
+  if(!menuShown){
+    displayPrint("Scan RFID Tag", 0);
+    displayPrint("A:Cycle User Logs", 1);
+    Serial.print("?");
+    menuShown = true;
+  }
   
+
+  char customKey = customKeypad.getKey();
+  
+  if (customKey == 'A'){
+    for (int i = 0; i < numItems; i++){
+      displayPrint(items[i].title.c_str(), 0);
+      if(items[i].checkedOut){
+        lcd.print(":Out");
+        displayPrint(items[i].checkedOutBy.c_str(), 1);
+      }
+      else{
+        lcd.print(":In");
+        displayPrint(items[i].lastCheeckOutBy.c_str(), 1);
+      }
+      customKey = customKeypad.getKey();
+      while (customKey != 'A'){
+        customKey = customKeypad.getKey();
+      }
+    }
+    displayPrint("", 0);
+    displayPrint("", 1);
+    delay(500);
+    customKey = customKeypad.getKey();
+    menuShown = false;
+  }
+
   if ( ! RFIDreader.PICC_IsNewCardPresent()) 
   {
     return;
@@ -72,41 +112,57 @@ void loop() {
 
   String content= "";
   byte letter;
-  for (byte i = 0; i < RFIDreader.uid.size; i++) 
-  {
+  for (byte i = 0; i < RFIDreader.uid.size; i++) {
     content.concat(String(RFIDreader.uid.uidByte[i] < 0x10 ? " 0" : " "));
     content.concat(String(RFIDreader.uid.uidByte[i], HEX));
   }
   content.toUpperCase();
-  Serial.println(content.substring(1));
-  Serial.println(items[0].id);
   for (int i = 0; i < numItems; i++){
     if (content.substring(1) == items[i].id){
-      displayPrint(items[i].title.c_str(), 0);
       if(items[i].checkedOut){
+        displayPrint(items[i].title.c_str(), 0);
         displayPrint("Returned", 1);
-        
+        items[i].lastCheeckOutBy = items[i].checkedOutBy;
+        items[i].checkedOutBy = "None";
       }
       else{
-        displayPrint("Enter Id:", 0);
+        displayPrint("Enter ID:", 0);
         int id = 0;
         int j = 0;
-        while (j < 4){
-          char customKey = customKeypad.getKey();
-          if (customKey){
-            id = id*10 + customKey;
-            j++;
+        
+        while(true){
+          int j = 0;
+          while (j < 4){
+            char customKey = customKeypad.getKey();
+            if (customKey){
+              id = id*10 + (customKey - '0');
+              j++;
+            }
+          }
+          for (int j = 0; j < numStudents; j++){
+            if (students[j].id == id){
+              items[i].checkedOutBy = students[j].name;
+            }
+          }
+          if(items[i].checkedOutBy != "None"){
+            break;
+          }
+          else{
+            id = 0;
+            displayPrint("Renter ID:", 0);
           }
         }
-        Serial.println(id);
+        
+
+        displayPrint(items[i].checkedOutBy.c_str(), 0);
         displayPrint("Checked Out", 1);
       }
       items[i].checkedOut = !(items[i].checkedOut);
     }
   }
 
-
-delay(2000);
+  delay(2000);
+  menuShown = false;
 }
 
 void displayPrint(const char str[], int row){
