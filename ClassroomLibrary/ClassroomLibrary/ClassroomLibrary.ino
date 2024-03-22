@@ -64,9 +64,13 @@ void setup() {
   RFIDreader.PCD_Init();  // Init MFRC522 card
 
   lcd.begin(16, 2); // Defines the Dimentions of the Display
+
+  pinMode(GreenLEDPin, OUTPUT);
+  pinMode(RedLEDPin, OUTPUT);
 }
 
 void loop() {
+  //If the menu is not shown, it will be
   if(!menuShown){
     displayPrint("Scan RFID Tag", 0);
     displayPrint("A:Cycle User Logs", 1);
@@ -122,11 +126,13 @@ void loop() {
       if(items[i].checkedOut){
         displayPrint(items[i].title.c_str(), 0);
         displayPrint("Returned", 1);
+        digitalWrite(GreenLEDPin, HIGH);
         items[i].lastCheeckOutBy = items[i].checkedOutBy;
         items[i].checkedOutBy = "None";
       }
       else{
         displayPrint("Enter ID:", 0);
+        displayPrint("", 1);
         int id = 0;
         int j = 0;
         
@@ -150,10 +156,11 @@ void loop() {
           else{
             id = 0;
             displayPrint("Renter ID:", 0);
+            digitalWrite(RedLEDPin, HIGH);
           }
         }
-        
-
+        digitalWrite(RedLEDPin, LOW);
+        digitalWrite(GreenLEDPin, HIGH);
         displayPrint(items[i].checkedOutBy.c_str(), 0);
         displayPrint("Checked Out", 1);
       }
@@ -163,6 +170,8 @@ void loop() {
 
   delay(2000);
   menuShown = false;
+  digitalWrite(GreenLEDPin, LOW);
+  digitalWrite(RedLEDPin, LOW);
 }
 
 void displayPrint(const char str[], int row){
