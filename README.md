@@ -18,3 +18,7 @@ In the world of education, we have noticed a drastic technology increase in the 
 | The device quickly checks items out. | Number of seconds to check items out. | 20 seconds | 12 seconds | Pass
 | The device quickly checks items in. | Number of seconds to check items in. | 5 seconds | 2 seconds | Pass
 | The device tracks the possession of items for better accountability. | The previous users that have used the item are known. | The previous users of each item should be stored. | All Items are Identified as either out or in with the current/ previous user | Pass
+
+### Completed Project
+![original_d78abaae-2108-446f-a5a8-6e4270af46db_20240322_055732](https://github.com/ChristopherBrown200/SeconClassroomLibrary/assets/147623094/ecbe3fc5-d085-487a-a9bc-6a2197ce1618)
+
