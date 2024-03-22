@@ -2,6 +2,7 @@
 #include <MFRC522.h>
 #include <LiquidCrystal.h>
 #include <Keypad.h>
+//#include "Item.h"
 
 
 //Constant for RFID Reader
@@ -27,41 +28,90 @@ Keypad customKeypad = Keypad( makeKeymap(hexaKeys), rowPins, colPins, ROWS, COLS
 //Object for LCD Display
 LiquidCrystal lcd(37, 38, 39, 40, 41, 42);
 
+struct Student{
+  String name;
+  int id;
+};
+Student chris = {"Chris", 0644};
+Student jay = {"Jay", 7691};
+Student henry = {"Henry", 2004};
+
+struct Item{
+  String id, title;
+  bool checkedOut;
+};
+
+//Array of Items
+Item card = {"33 55 14 11", "card", false};
+Item keychain = {"EF 18 73 1D", "key chain", false};
+const int numItems = 2;
+Item items[numItems] = {card, keychain};
+String id = "EF 18 73 1D";
+
 
 void setup() {
   Serial.begin(9600);  // Initialize serial communications with the PC
   while (!Serial);     // Do nothing if no serial port is opened (added for Arduinos based on ATMEGA32U4)
   SPI.begin();         // Init SPI bus
   RFIDreader.PCD_Init();  // Init MFRC522 card
+
   lcd.begin(16, 2); // Defines the Dimentions of the Display
 }
 
 void loop() {
   
-  //Check for RFID Card
-  if ( ! RFIDreader.PICC_IsNewCardPresent() || ! RFIDreader.PICC_ReadCardSerial() ) {
-    char customKey = customKeypad.getKey();
-  
-    if (customKey){
-      displayPrint("Test", 0, 1);
-    }
-
-    delay(50);
+  if ( ! RFIDreader.PICC_IsNewCardPresent()) 
+  {
     return;
   }
-  
-  //Read UID
-  Serial.print(F("Card UID:"));
-  for (byte i = 0; i < RFIDreader.uid.size; i++) {
-    Serial.print(RFIDreader.uid.uidByte[i]);//, HEX);
-    Serial.print("|");
-  } 
-  Serial.println();
+  // Select one of the cards
+  if ( ! RFIDreader.PICC_ReadCardSerial()) 
+  {
+    return;
+  }
+
+  String content= "";
+  byte letter;
+  for (byte i = 0; i < RFIDreader.uid.size; i++) 
+  {
+    content.concat(String(RFIDreader.uid.uidByte[i] < 0x10 ? " 0" : " "));
+    content.concat(String(RFIDreader.uid.uidByte[i], HEX));
+  }
+  content.toUpperCase();
+  Serial.println(content.substring(1));
+  Serial.println(items[0].id);
+  for (int i = 0; i < numItems; i++){
+    if (content.substring(1) == items[i].id){
+      displayPrint(items[i].title.c_str(), 0);
+      if(items[i].checkedOut){
+        displayPrint("Returned", 1);
+        
+      }
+      else{
+        displayPrint("Enter Id:", 0);
+        int id = 0;
+        int j = 0;
+        while (j < 4){
+          char customKey = customKeypad.getKey();
+          if (customKey){
+            id = id*10 + customKey;
+            j++;
+          }
+        }
+        Serial.println(id);
+        displayPrint("Checked Out", 1);
+      }
+      items[i].checkedOut = !(items[i].checkedOut);
+    }
+  }
+
 
 delay(2000);
 }
 
-void displayPrint(const char str[], int charIndex, int row){
-  lcd.setCursor(charIndex, row);
+void displayPrint(const char str[], int row){
+  lcd.setCursor(0, row);
+  lcd.print("                ");
+  lcd.setCursor(0, row);
   lcd.print(str);
 }
