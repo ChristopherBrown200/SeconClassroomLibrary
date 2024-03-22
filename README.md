@@ -2,7 +2,7 @@
 
 ## User:
 
-Check Out Item With UID
+Check Out Item With ID Number
 
 Check In Item
 
@@ -10,6 +10,6 @@ Check In Item
 
 Item Check-Out History (WIP)
 
-Add/Remove UID (WIP)
+Add/Remove Users (WIP)
 
 Add/Remove Items (WIP)
