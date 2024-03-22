@@ -2,7 +2,6 @@
 #include <MFRC522.h>
 #include <LiquidCrystal.h>
 #include <Keypad.h>
-//#include "Item.h"
 
 
 //Constant for RFID Reader
@@ -14,7 +13,7 @@ MFRC522 RFIDreader(SS_PIN, RST_PIN);
 //Constant for Keypad
 const byte ROWS = 4;
 const byte COLS = 4;
-char hexaKeys[ROWS][COLS] = {//define the cymbols on the buttons of the keypads
+char hexaKeys[ROWS][COLS] = {//define the symbols on the buttons of the keypads
   {'1','2','3','A'},
   {'4','5','6','B'},
   {'7','8','9','C'},
