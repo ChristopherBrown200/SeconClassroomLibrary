@@ -1,9 +1,15 @@
 # Expected Features
 
-Checked Out/In Tracker
+## User:
+
+Check Out Item With UID
+
+Check In Item
+
+## Admin:
 
 Item Check-Out History (WIP)
 
-Admin Add/Remove Verified Users (WIP)
+Add/Remove UID (WIP)
 
-Admin Add/Remove Items (WIP)
+Add/Remove Items (WIP)
