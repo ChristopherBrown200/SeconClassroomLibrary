@@ -74,14 +74,14 @@ void loop() {
   if(!menuShown){
     displayPrint("Scan RFID Tag", 0);
     displayPrint("A:Cycle User Logs", 1);
-    Serial.print("?");
     menuShown = true;
   }
   
-
+  //checks it the A key has been pressed
   char customKey = customKeypad.getKey();
-  
   if (customKey == 'A'){
+
+    //Shows an item, its status, and who has/had it
     for (int i = 0; i < numItems; i++){
       displayPrint(items[i].title.c_str(), 0);
       if(items[i].checkedOut){
@@ -92,28 +92,31 @@ void loop() {
         lcd.print(":In");
         displayPrint(items[i].lastCheeckOutBy.c_str(), 1);
       }
+
+      //Waits for the user to press the A key to cycle to the next item or return to the menu
       customKey = customKeypad.getKey();
       while (customKey != 'A'){
         customKey = customKeypad.getKey();
       }
     }
-    displayPrint("", 0);
-    displayPrint("", 1);
-    delay(500);
-    customKey = customKeypad.getKey();
+    
+    //Tells the Menu to load
     menuShown = false;
   }
 
+  //If there is no new tag restart loop
   if ( ! RFIDreader.PICC_IsNewCardPresent()) 
   {
     return;
   }
-  // Select one of the cards
+
+  // Selects one of the cards
   if ( ! RFIDreader.PICC_ReadCardSerial()) 
   {
     return;
   }
 
+  //Gets the ID of the RFID Tag
   String content= "";
   byte letter;
   for (byte i = 0; i < RFIDreader.uid.size; i++) {
@@ -121,22 +124,40 @@ void loop() {
     content.concat(String(RFIDreader.uid.uidByte[i], HEX));
   }
   content.toUpperCase();
+
+  //finds the item with the ID in the list
   for (int i = 0; i < numItems; i++){
+
+    //Enters when IDs match
     if (content.substring(1) == items[i].id){
+
+      //If the Item is Checked out
       if(items[i].checkedOut){
+
+        //Tells the user the ID was returned
         displayPrint(items[i].title.c_str(), 0);
         displayPrint("Returned", 1);
+
+        //Turns on the Green LED
         digitalWrite(GreenLEDPin, HIGH);
+
+        //Saves the user who last checked out the item
         items[i].lastCheeckOutBy = items[i].checkedOutBy;
         items[i].checkedOutBy = "None";
       }
+
+      //If the Item is not Checked Out
       else{
+
+        //Asks the user for their ID
         displayPrint("Enter ID:", 0);
         displayPrint("", 1);
+
+        //loops until a vaild ID is entered
         int id = 0;
-        int j = 0;
-        
         while(true){
+
+          //loops until 4 digits are entered
           int j = 0;
           while (j < 4){
             char customKey = customKeypad.getKey();
@@ -145,38 +166,66 @@ void loop() {
               j++;
             }
           }
+
+          //check for the ID in the list of students
           for (int j = 0; j < numStudents; j++){
+
+            //sets the user as the person who has checked out the item
             if (students[j].id == id){
               items[i].checkedOutBy = students[j].name;
             }
           }
+
+          //If the user was found exit the loop
           if(items[i].checkedOutBy != "None"){
             break;
           }
+
+          //if a user was not found ask for the ID agian
           else{
             id = 0;
             displayPrint("Renter ID:", 0);
+
+            //turns on the red LED
             digitalWrite(RedLEDPin, HIGH);
           }
         }
+
+        //Makes sure the Red LED is off
         digitalWrite(RedLEDPin, LOW);
+
+        //turns on the Green LED
         digitalWrite(GreenLEDPin, HIGH);
+
+        //Let the user know the item was checked out
         displayPrint(items[i].checkedOutBy.c_str(), 0);
         displayPrint("Checked Out", 1);
       }
+
+      //toggles the state of the item
       items[i].checkedOut = !(items[i].checkedOut);
     }
   }
 
+  //delay to prevent duplicate reads of the RFID
   delay(2000);
+
+  //Tells the menu to show
   menuShown = false;
+
+  //turn off all LEDs
   digitalWrite(GreenLEDPin, LOW);
   digitalWrite(RedLEDPin, LOW);
 }
 
+//method to set a line on the display
 void displayPrint(const char str[], int row){
+
+  //clears the line
   lcd.setCursor(0, row);
   lcd.print("                ");
+
+  //displays the text
   lcd.setCursor(0, row);
   lcd.print(str);
 }
